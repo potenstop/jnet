@@ -117,8 +117,11 @@ public class BossClient {
 
     /**
      * 发送本地的文件
-     *
-     * @param file 文件对象
+     * @param file                      发送的文件对象
+     * @param receive                   接收人id
+     * @param receiveId                 接收人类型id
+     * @param fileCallback             回调
+     * @throws FileNotFoundException    文件不存在
      */
     public void sendFile(File file, byte receive, String receiveId, FileCallback fileCallback) throws FileNotFoundException {
         fileHandler.sendFile(file, receive, receiveId, fileCallback);

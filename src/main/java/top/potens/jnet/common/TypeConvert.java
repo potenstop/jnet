@@ -25,7 +25,7 @@ import java.nio.charset.Charset;
  * ===============================
  * java byte保存为补码
  * ================================
- * type & 0xff意义: 去除除了最后8位的其余高位，只获取最后8位。
+ * type 与 0xff意义: 去除除了最后8位的其余高位，只获取最后8位。
  * 类型转换
  */
 public class TypeConvert {
