@@ -35,12 +35,18 @@
                 <!-- 设置默认激活这个配置 -->
                 <activeByDefault>true</activeByDefault>
             </activation>
+
         </profile>
         <profile>
             <!--打包环境-->
             <id>release</id>
+            <properties>
+                <profiles.active>release</profiles.active>
+            </properties>
+            <!--定义snapshots库和releases库的nexus地址-->
             <distributionManagement>
                 <snapshotRepository>
+                    <!--oss需要对应到settings.xml下的service的id-->
                     <id>oss</id>
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
@@ -59,11 +65,12 @@
         </profile>
     </profiles>
 
-    <groupId>top.potens</groupId>
+    <groupId>top.potens.jnet</groupId>
     <artifactId>jnet</artifactId>
     <version>1.0-SNAPSHOT</version>
     <build>
         <plugins>
+            <!--编译插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -72,6 +79,7 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
+            <!--生产源码文件插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -88,6 +96,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--生产javadoc插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
@@ -101,6 +110,7 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--gpg加密插件-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
