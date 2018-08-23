@@ -1,6 +1,7 @@
 package top.potens.jnet.bootstrap;
 
 
+import io.netty.channel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.potens.jnet.bean.RPCHeader;
@@ -12,10 +13,6 @@ import top.potens.jnet.protocol.HBinaryProtocol;
 import top.potens.jnet.protocol.HBinaryProtocolDecoder;
 import top.potens.jnet.protocol.HBinaryProtocolEncoder;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -97,7 +94,12 @@ public class BossClient {
         this.fileUpSaveDir = dir;
         return this;
     }
+    // 连接回调
+    private interface ConnectionCallback{
+        public void success();
+    }
     // ===========
+
 
     /**
      * 发送文本
@@ -159,7 +161,15 @@ public class BossClient {
                         pipeline.addLast("business", new BossClientHandler());
                     }
                 });
-        return b.connect(this.host, this.port);
+
+        ChannelFuture connect = b.connect(this.host, this.port);
+        connect.addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                // 连接完成
+            }
+        });
+        return connect;
     }
     // 释放资源
     public void release(){
