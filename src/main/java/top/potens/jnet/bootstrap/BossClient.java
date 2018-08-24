@@ -198,6 +198,6 @@ public class BossClient {
 
     // 释放资源
     public void release() {
-        workerGroup.shutdownGracefully();
+        if (workerGroup != null) workerGroup.shutdownGracefully();
     }
 }

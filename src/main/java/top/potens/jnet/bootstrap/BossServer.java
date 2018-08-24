@@ -150,9 +150,8 @@ public class BossServer {
     }
     // 释放资源
     public void release(){
-
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
+        if (bossGroup != null) bossGroup.shutdownGracefully();
+        if (workerGroup != null) workerGroup.shutdownGracefully();
     }
 
 }
