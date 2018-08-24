@@ -15,7 +15,7 @@ import java.io.RandomAccessFile;
 public class BossClientHandler extends SimpleChannelInboundHandler<HBinaryProtocol> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-
+        ctx.fireChannelActive();
     }
 
     @Override

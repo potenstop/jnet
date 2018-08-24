@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import top.potens.jnet.bean.RPCHeader;
 import top.potens.jnet.event.EventSource;
 import top.potens.jnet.handler.*;
+import top.potens.jnet.helper.SendPoolHelper;
 import top.potens.jnet.listener.FileCallback;
 import top.potens.jnet.listener.RPCCallback;
 import top.potens.jnet.protocol.HBinaryProtocol;
@@ -40,13 +41,20 @@ public class BossClient {
     private EventSource eventSource;
     private NioEventLoopGroup workerGroup;
     private String fileUpSaveDir;
+    private SendPoolHelper sendPoolHelper;
+    private boolean isActivityAll;
+
     public BossClient() {
         initDefault();
+        sendPoolHelper = new SendPoolHelper();
+        isActivityAll = false;
         this.eventSource = new EventSource();
     }
+
     private void initDefault() {
         this.fileUpSaveDir = "/d/tmp";
     }
+
     public String getFileUpSaveDir() {
         return fileUpSaveDir;
     }
@@ -75,15 +83,18 @@ public class BossClient {
         this.fileReceiveCallback = fileCallback;
         return this;
     }
+
     /**
      * 添加server event
-     * @param eventListener     listener
+     *
+     * @param eventListener listener
      * @return this
      */
     public BossClient addServerEventListener(EventListener eventListener) {
         this.eventSource.addListener(eventListener);
         return this;
     }
+
     /**
      * 设置文件上传保存路径
      *
@@ -94,56 +105,52 @@ public class BossClient {
         this.fileUpSaveDir = dir;
         return this;
     }
+
     // 连接回调
-    private interface ConnectionCallback{
+    private interface ConnectionCallback {
         public void success();
     }
     // ===========
 
 
     /**
-     * 发送文本
-     *
-     * @param str 对应的文本
-     */
-    public void sendText(String str) {
-    }
-
-    /**
-     * 发送文本
-     *
-     * @param str 对应的文本
-     */
-    public void sendJson(String str) {
-    }
-
-    /**
      * 发送本地的文件
-     * @param file                      发送的文件对象
-     * @param receive                   接收人id
-     * @param receiveId                 接收人类型id
-     * @param fileCallback             回调
-     * @throws FileNotFoundException    文件不存在
+     *
+     * @param file         发送的文件对象
+     * @param receive      接收人id
+     * @param receiveId    接收人类型id
+     * @param fileCallback 回调
+     * @throws FileNotFoundException 文件不存在
      */
     public void sendFile(File file, byte receive, String receiveId, FileCallback fileCallback) throws FileNotFoundException {
-        fileHandler.sendFile(file, receive, receiveId, fileCallback);
+        if (isActivityAll) {
+            fileHandler.sendFile(file, receive, receiveId, fileCallback);
+        } else {
+            sendPoolHelper.addFile(file, receive, receiveId, fileCallback);
+        }
     }
 
     /**
      * 发送rpc请求
-     * @param rpcHeader     请求头
-     * @param rpcCallback   响应回调
+     *
+     * @param rpcHeader   请求头
+     * @param rpcCallback 响应回调
      */
     public void sendRPC(RPCHeader rpcHeader, RPCCallback rpcCallback) {
-        mRPCHandler.sendRPC(rpcHeader, rpcCallback);
+        if (isActivityAll) {
+            mRPCHandler.sendRPC(rpcHeader, rpcCallback);
+        } else {
+            sendPoolHelper.addRPC(rpcHeader, rpcCallback);
+        }
     }
+
     public ChannelFuture start() {
         workerGroup = new NioEventLoopGroup();
         Bootstrap b = new Bootstrap();
         b.group(workerGroup)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS,1000)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         ChannelPipeline pipeline = ch.pipeline();
@@ -159,20 +166,38 @@ public class BossClient {
                         pipeline.addLast("rpc", mRPCHandler);
                         pipeline.addLast("event", mEventHandler);
                         pipeline.addLast("business", new BossClientHandler());
+                        pipeline.addLast("last", new SimpleChannelInboundHandler<HBinaryProtocol>(){
+                            @Override
+                            public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                // 连接完成
+                                isActivityAll = true;
+                                sendPoolHelper.execFile(fileHandler);
+                                sendPoolHelper.execRPC(mRPCHandler);
+                            }
+                            @Override
+                            protected void channelRead0(ChannelHandlerContext channelHandlerContext, HBinaryProtocol protocol) throws Exception {
+
+                            }
+                        });
                     }
                 });
 
         ChannelFuture connect = b.connect(this.host, this.port);
-        connect.addListener(new ChannelFutureListener() {
+        connect.channel().closeFuture().addListener(new ChannelFutureListener() {
             @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                // 连接完成
+            public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                // 连接断开
+                isActivityAll = false;
+                logger.debug("operationComplete");
+
+
             }
         });
         return connect;
     }
+
     // 释放资源
-    public void release(){
+    public void release() {
         workerGroup.shutdownGracefully();
     }
 }

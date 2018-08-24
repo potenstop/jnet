@@ -23,6 +23,21 @@ public class TestBoosClient {
         MyEventListener listener = new MyEventListener();
 
         final BossClient bossClient = new BossClient();
+       HashMap<String, String> stringStringHashMap = new HashMap<>();
+        stringStringHashMap.put("a", "1");
+        RPCHeader test = new RPCHeader("test", stringStringHashMap);
+        bossClient.sendRPC(test, new RPCCallback<String>() {
+            @Override
+            public void succeed(String clients) {
+                logger.info(String.valueOf(clients));
+            }
+            @Override
+            public void error(String error) {
+                logger.error(error);
+            }
+        });
+
+
         bossClient.connect("127.0.0.1", 31415).addServerEventListener(listener);
         ChannelFuture channelFuture = bossClient.receiveFile(new FileCallback() {
             @Override
@@ -47,10 +62,10 @@ public class TestBoosClient {
             e.printStackTrace();
         }
 
-        HashMap<String, String> stringStringHashMap = new HashMap<>();
-        stringStringHashMap.put("a", "1");
-        RPCHeader test = new RPCHeader("test", stringStringHashMap);
-        bossClient.sendRPC(test, new RPCCallback<String>() {
+        HashMap<String, String> stringStringHashMap1 = new HashMap<>();
+        stringStringHashMap1.put("a", "1");
+        RPCHeader test1 = new RPCHeader("test", stringStringHashMap1);
+        bossClient.sendRPC(test1, new RPCCallback<String>() {
             @Override
             public void succeed(String clients) {
                 logger.info(String.valueOf(clients));
@@ -61,13 +76,13 @@ public class TestBoosClient {
             }
         });
 
-        try {
+        /*try {
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             logger.error("channel:", e);
         } finally {
             bossClient.release();
-        }
+        }*/
         /*try {
             bossClient.sendFile(new File("D:\\data\\build.zip"),HBinaryProtocol.RECEIVE_ASSIGN,"45bf74d2", new FileCallback() {
 //            bossClient.sendFile(new File("D:\\data\\build.zip"), HBinaryProtocol.RECEIVE_SERVER, null, new FileCallback() {

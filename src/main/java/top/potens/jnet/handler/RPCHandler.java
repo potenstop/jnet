@@ -55,6 +55,7 @@ public class RPCHandler extends SimpleChannelInboundHandler<HBinaryProtocol> {
         }
     }
     public void sendRPC(RPCHeader rpcHeader, RPCCallback rpcCallback) {
+
         if (rpcHeader.getMethod()!= null){
             String stringRPCHeader = gson.toJson(rpcHeader);
             HBinaryProtocol protocol = HBinaryProtocol.buildReqRPC(stringRPCHeader);
