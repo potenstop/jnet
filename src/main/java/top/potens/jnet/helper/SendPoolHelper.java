@@ -51,7 +51,7 @@ public class SendPoolHelper {
      * @param fileHandler   fileHandler
      */
     public void execFile(FileHandler fileHandler) {
-        logger.debug("execFile start");
+        logger.debug("execFile start:" + filePoolObjectList.size());
         for (FilePoolObject filePoolObject : filePoolObjectList){
             try {
                 fileHandler.sendFile(filePoolObject.file, filePoolObject.receive, filePoolObject.receiveId, filePoolObject.fileCallback);
@@ -66,7 +66,7 @@ public class SendPoolHelper {
      * @param rpcHandler    rpcHandler
      */
     public void execRPC(RPCHandler rpcHandler) {
-        logger.debug("execRPC start");
+        logger.debug("execRPC start:" + rpcPoolObjectList.size());
         for (RPCPoolObject rpcPoolObject : rpcPoolObjectList) {
             rpcHandler.sendRPC(rpcPoolObject.rpcHeader, rpcPoolObject.rpcCallback);
         }
